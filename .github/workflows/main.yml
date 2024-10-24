@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build UsbAudioSink APK
 on:
   push:
     branches: [ main ]
@@ -10,15 +10,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Set up JDK
+    
+    - name: Set up JDK 11
       uses: actions/setup-java@v3
       with:
-        java-version: '11'
+        java-version: '11'  # Updated to Java 11
         distribution: 'temurin'
-    - name: Build APK
-      run: ./gradlew assembleDebug
+    
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v2
+        
+    - name: Create local.properties
+      run: |
+        cd UsbAudioSink
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        
+    - name: Update Gradle Version
+      run: |
+        cd UsbAudioSink
+        # Update the gradle wrapper version
+        if [ ! -f "./gradlew" ]; then
+          gradle wrapper --gradle-version 7.3.3
+        else
+          ./gradlew wrapper --gradle-version 7.3.3
+        fi
+        chmod +x ./gradlew
+        
+    - name: Build with Gradle
+      run: |
+        cd UsbAudioSink
+        ./gradlew assembleDebug --stacktrace
+        
     - name: Upload APK
       uses: actions/upload-artifact@v3
       with:
-        name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
+        name: usb-audio-sink-debug
+        path: UsbAudioSink/app/build/outputs/apk/debug/app-debug.apk
