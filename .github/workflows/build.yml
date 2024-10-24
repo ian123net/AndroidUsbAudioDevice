@@ -1,0 +1,45 @@
+name: Build UsbAudioSink APK
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'  # Using Java 8 as it's an older project
+        distribution: 'temurin'
+    
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v2
+        
+    - name: Create local.properties
+      run: |
+        cd UsbAudioSink
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        
+    - name: Grant execute permission for gradlew
+      run: |
+        cd UsbAudioSink
+        if [ ! -f "./gradlew" ]; then
+          gradle wrapper
+        fi
+        chmod +x ./gradlew
+        
+    - name: Build with Gradle
+      run: |
+        cd UsbAudioSink
+        ./gradlew assembleDebug
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: usb-audio-sink-debug
+        path: UsbAudioSink/app/build/outputs/apk/debug/app-debug.apk
